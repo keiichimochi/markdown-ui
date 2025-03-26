@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>URL → Markdown変換ナリ！</title>
+</head>
+<body>
+  <h1>Markdown変換ツール</h1>
+  <input type="text" id="urlInput" placeholder="変換したいURLを入力ナリ！" size="60" />
+  <button onclick="convert()">変換＆ダウンロード</button>
+  <pre id="preview"></pre>
+
+  <script>
+    async function convert() {
+      const url = document.getElementById("urlInput").value;
+      const res = await fetch("https://<YOUR_WORKER>.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+
+      if (!res.ok) {
+        alert("変換に失敗したナリ！");
+        return;
+      }
+
+      const md = await res.text();
+
+      // 表示
+      document.getElementById("preview").textContent = md;
+
+      // ダウンロード
+      const blob = new Blob([md], { type: "text/markdown" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "converted.md";
+      a.click();
+    }
+  </script>
+</body>
+</html>
