@@ -53,7 +53,7 @@
       preview.textContent = "";
 
       try {
-        const res = await fetch("https://<YOUR_WORKER>.workers.dev", {
+        const res = await fetch("https://markdown-api.keiichimochi.workers.dev", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url })
