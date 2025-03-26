@@ -1,39 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>URL → Markdown変換ナリ！</title>
+  <title>Markdown変換ツール</title>
+  <style>
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    /* ローディングスピナー */
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      display: none;
+      margin: 10px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
   <h1>Markdown変換ツール</h1>
   <input type="text" id="urlInput" placeholder="変換したいURLを入力ナリ！" size="60" />
   <button onclick="convert()">変換＆ダウンロード</button>
+
+  <div class="spinner" id="spinner"></div>
+  <div id="status"></div>
   <pre id="preview"></pre>
+
+  <!-- 🔔 通知音 -->
+  <audio id="successSound">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+  </audio>
 
   <script>
     async function convert() {
       const url = document.getElementById("urlInput").value;
-      const res = await fetch("https://<YOUR_WORKER>.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
-      });
+      const status = document.getElementById("status");
+      const preview = document.getElementById("preview");
+      const spinner = document.getElementById("spinner");
+      const sound = document.getElementById("successSound");
 
-      if (!res.ok) {
-        alert("変換に失敗したナリ！");
-        return;
+      status.textContent = "🔄 変換中ナリ…";
+      spinner.style.display = "block";
+      preview.textContent = "";
+
+      try {
+        const res = await fetch("https://<YOUR_WORKER>.workers.dev", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+
+        if (!res.ok) {
+          spinner.style.display = "none";
+          status.textContent = "❌ エラーが発生したナリ…";
+          return;
+        }
+
+        const md = await res.text();
+        preview.textContent = md;
+
+        const blob = new Blob([md], { type: "text/markdown" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "converted.md";
+        a.click();
+
+        sound.play(); // 🔔 再生！
+
+        status.textContent = "✅ 完了ナリ！ダウンロードしたナリよ！";
+      } catch (err) {
+        status.textContent = "❌ ネットワークエラーっぽいナリ…";
+        console.error(err);
+      } finally {
+        spinner.style.display = "none";
       }
-
-      const md = await res.text();
-
-      // 表示
-      document.getElementById("preview").textContent = md;
-
-      // ダウンロード
-      const blob = new Blob([md], { type: "text/markdown" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "converted.md";
-      a.click();
     }
   </script>
 </body>
